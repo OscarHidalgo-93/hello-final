@@ -7,10 +7,7 @@ pipeline {
         ansiColor('xterm')
     }
 
-    tools {
-        jdk 'jdk1.8'
-        java 11
-    }
+
 
     stages {
 
