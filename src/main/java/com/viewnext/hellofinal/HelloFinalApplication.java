@@ -26,7 +26,6 @@ public class HelloFinalApplication {
 	Float add(
 			@RequestParam (name="a") Float a,
 			@RequestParam (name="b") Float b) {
-
 		return a + b;
 	}
 
