@@ -9,7 +9,7 @@ pipeline {
 
     tools {
         jdk 'jdk1.8'
-        jdk 'jdk1.6'
+        java 11
     }
 
     stages {
