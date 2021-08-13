@@ -78,12 +78,15 @@ pipeline {
             steps {
                 echo 'Buildeando...'
                 sh 'docker-compose build'
+
             }
 
             post {
                 success {
+                    when { expression { false } }
+
                     echo 'Archivando...'
-                    archiveArtifacts artifacts: 'build/libs/*.jar'
+                   // archiveArtifacts artifacts: 'build/libs/*.jar'
                 }
             }
         }
