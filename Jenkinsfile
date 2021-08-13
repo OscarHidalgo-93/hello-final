@@ -75,6 +75,8 @@ pipeline {
 
 
         stage('Build') {
+            when { expression { false } }
+            steps {
             steps {
                 echo 'Buildeando...'
                 sh 'docker-compose build'
@@ -83,7 +85,7 @@ pipeline {
 
             post {
                 success {
-                    when { expression { false } }
+
 
                     echo 'Archivando...'
                    // archiveArtifacts artifacts: 'build/libs/*.jar'
