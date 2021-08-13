@@ -2,11 +2,17 @@ plugins {
 	id 'org.springframework.boot' version '2.5.3'
 	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
 	id 'java'
+	id 'groovy'
+	id 'pmd'
+	id 'jacoco'
+	id "com.github.spotbugs" version "4.7.2"
+	id "org.sonarqube" version "3.3"
+	id 'info.solidsoft.pitest' version '1.5.1'
 }
 
 group = 'com.viewnext'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '16'
+sourceCompatibility = '11'
 
 repositories {
 	mavenCentral()
@@ -14,9 +20,44 @@ repositories {
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.codehaus.groovy:groovy'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 test {
 	useJUnitPlatform()
+	finalizedBy jacocoTestReport //report is always generated after test run
+}
+jacocoTestReport {
+	dependsOn test  //test are required before generating a report
+	reports {
+		xml.required = true
+		html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+	}
+}
+pmd{
+	consoleOutput = true
+	toolVersion = "6.21.0"
+	ruleSets = ["category/java/errorprone.xml", "category/java/bestpractices.xml"]
+}
+
+spotbugs{
+	ignoreFailures = true
+}
+
+/*
+sonarqube {
+
+	properties {
+		property "sonar.projectKey", "OscarH93_hello-srping_AXsQCbNmx0gCSfSd0Xd4"
+	}
+}
+*/
+
+pmd{
+	ignoreFailures = true
+}
+pitest {
+	junit5PluginVersion = '0.12'
+	outputFormats = ['XML', 'HTML']
 }
