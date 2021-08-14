@@ -78,85 +78,81 @@ pipeline {
             steps {
                 steps {
                     echo 'Buildeando...'
-                    sh '''
-                            docker-compose build
-                          ./gradlew assemble
-                       '''
-
+                    sh 'docker-compose build '
 
                 }
 
                 post {
                     success {
                         echo 'Archivando...'
-                        archiveArtifacts artifacts: 'build/libs/*.jar'
+                        //archiveArtifacts artifacts: 'build/libs/*.jar'
                     }
                 }
             }
         }
-            stage('Security') {
-                when { expression { false } }
-                steps {
-                    echo 'Security analisis...'
-                    sh 'trivy image --format=json --output=trivy-image.json hello-final:latest'
-                }
-                post {
-                    always {
-                        recordIssues(
-                                enabledForFailure: true,
-                                aggregatingResults: true,
-                                tool: trivy(pattern: 'trivy-*.json')
+        stage('Security') {
+            when { expression { false } }
+            steps {
+                echo 'Security analisis...'
+                sh 'trivy image --format=json --output=trivy-image.json hello-final:latest'
+            }
+            post {
+                always {
+                    recordIssues(
+                            enabledForFailure: true,
+                            aggregatingResults: true,
+                            tool: trivy(pattern: 'trivy-*.json')
 
 
-                        )
-                    }
+                    )
                 }
             }
+        }
 
-            stage('Publish') {
-                when { expression { false } }
-                steps {
+        stage('Publish') {
+            when { expression { false } }
+            steps {
 
-                    echo 'Se arcivó el artefacto, Publicando...'
-                    //mirar despliegue con pipeline con sentencia 'when
+                echo 'Se arcivó el artefacto, Publicando...'
+                //mirar despliegue con pipeline con sentencia 'when
 
-                    //'java -jar  build/libs/hello-srping-0.0.1-SNAPSHOT.jar' --> aqui tira directamente del .jar
+                //'java -jar  build/libs/hello-srping-0.0.1-SNAPSHOT.jar' --> aqui tira directamente del .jar
 
-                    // withDockerRegistry([url:'http://10.250.12.3:5050', credentialsId:'token-dockerRegistry']){
-                    //   sh 'docker tag hello-srping-pruebas:latest 10.250.12.3:5050/oscarh93/hello-srping:PRUEBAS-1.${BUILD_NUMBER}'
-                    //  sh 'docker push 10.250.12.3:5050/oscarh93/hello-srping:PRUEBAS-1.${BUILD_NUMBER}'
-
-                }
-
-                // Parte de ssh Agent
-
-                // sshagent(credentials: ['sshJenkins']) {
-                // sh 'git tag MAIN-1.1.${BUILD_NUMBER}'
-                //  sh 'git push --tags'
-                //Se le puede poner en lugar de todos los cambios, hacerlo por el tag que queramos
-                // }
+                // withDockerRegistry([url:'http://10.250.12.3:5050', credentialsId:'token-dockerRegistry']){
+                //   sh 'docker tag hello-srping-pruebas:latest 10.250.12.3:5050/oscarh93/hello-srping:PRUEBAS-1.${BUILD_NUMBER}'
+                //  sh 'docker push 10.250.12.3:5050/oscarh93/hello-srping:PRUEBAS-1.${BUILD_NUMBER}'
 
             }
-            stage('Deploy') {
-                steps {
-                    echo 'Desplegando servicio...'
-                    sshagent(credentials: ['appkey']) {
 
-                        sh '''
+            // Parte de ssh Agent
+
+            // sshagent(credentials: ['sshJenkins']) {
+            // sh 'git tag MAIN-1.1.${BUILD_NUMBER}'
+            //  sh 'git push --tags'
+            //Se le puede poner en lugar de todos los cambios, hacerlo por el tag que queramos
+            // }
+
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Desplegando servicio...'
+                sshagent(credentials: ['appkey']) {
+
+                    sh '''
 
                          ssh -o StrictHostKeyChecking=no app@10.250.12.3 'cd hello-final && docker-compose pull && docker-compose up -d'
 
                        '''
 
-                    }
                 }
-
             }
 
+        }
 
-        }//stages
+
+    }//stages
 
 
-    }//pipeline
+}//pipeline
 
 
