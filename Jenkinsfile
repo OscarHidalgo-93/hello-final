@@ -16,8 +16,18 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Testing..'
-                junit 'build/test-results/test/TEST-*.xml'
+                 withGradle {
+                                 sh './gradlew clean test'
+                             }
+
             }
+           post {
+                always {
+                 junit 'build/test-results/test/TEST-*.xml'
+                 //jacoco
+                 //record issues del pitest
+                }
+           }
         }
         stage('Deploy') {
             steps {
