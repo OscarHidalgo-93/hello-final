@@ -74,7 +74,7 @@ pipeline {
 
 
         stage('Build') {
-            when { expression { false } }
+
             steps {
                 steps {
                     echo 'Buildeando...'
@@ -84,13 +84,12 @@ pipeline {
 
                 post {
                     success {
-
-
                         echo 'Archivando...'
                         // archiveArtifacts artifacts: 'build/libs/*.jar'
                     }
                 }
             }
+        }
             stage('Security') {
                 when { expression { false } }
                 steps {
@@ -157,4 +156,3 @@ pipeline {
     }//pipeline
 
 
-}
