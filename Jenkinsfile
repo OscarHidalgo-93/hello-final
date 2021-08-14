@@ -78,14 +78,18 @@ pipeline {
             steps {
                 steps {
                     echo 'Buildeando...'
-                    sh 'docker-compose build'
+                    sh '''
+                            docker-compose build
+                          ./gradlew assemble
+                       '''
+
 
                 }
 
                 post {
                     success {
                         echo 'Archivando...'
-                        // archiveArtifacts artifacts: 'build/libs/*.jar'
+                        archiveArtifacts artifacts: 'build/libs/*.jar'
                     }
                 }
             }
