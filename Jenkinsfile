@@ -1,158 +1,29 @@
-#!/usr/bin/env groovy
 pipeline {
-
     agent any
 
     options {
         ansiColor('xterm')
     }
 
-
     stages {
-
-        stage('Test') {
-            when { expression { false } }
-            steps {
-                echo 'Testeando...'
-                withGradle {
-                    sh './gradlew clean test pitest'
-                }
-            }
-            post {
-                always {
-                    junit 'build/test-results/test/TEST-*.xml'
-                    jacoco execPattern: 'build/jacoco/*.exec'
-                    recordIssues(enabledForFailure: true,
-                            tool: pit(pattern: "build/reports/pitest/**/*.xml"))
-
-                }
-            }
-
-
-        }
-
-        stage('Analisis') {
-            when { expression { false } }
-            failFast true
-            parallel {
-                stage('SonarQube Analysis') {
-                    //   when { expression { false } } //expresion condicional, nos dejara de hacer el test ==> coments
-                    steps {
-                        withSonarQubeEnv('SonarQube-sever') {
-                            sh "./gradlew sonarqube"
-                        }
-
-                    }
-
-                }
-                stage('QA') {
-                    when { expression { false } }
-                    steps {
-                        echo 'Checking...'
-                        withGradle {
-                            sh './gradlew clean check'
-
-                        }
-                    }
-                    post {
-                        always {
-                            recordIssues(
-                                    tools: [
-                                            pmdParser(pattern: 'build/reports/pmd/*.xml'),
-                                            spotBugs(pattern: 'build/reports/spotbugs/*.xml')
-                                    ]
-                            )
-                        }
-
-                    }
-
-                }
-
-
-            }
-        }
-
-
         stage('Build') {
-
             steps {
-                steps {
-                    echo 'Buildeando...'
-                    sh 'docker-compose build '
-
-                }
-
-                post {
-                    success {
-                        echo 'Archivando...'
-                        //archiveArtifacts artifacts: 'build/libs/*.jar'
-                    }
-                }
+                 sh '''docker-compose build
+                       docker image tag hello-final:latest hello-final:MAIN-1.0.${BUILD_NUMBER}-${GIT_COMMIT}
+                    '''
             }
         }
-        stage('Security') {
-            when { expression { false } }
+        stage('Test') {
             steps {
-                echo 'Security analisis...'
-                sh 'trivy image --format=json --output=trivy-image.json hello-final:latest'
+                echo 'Testing..'
+                junit 'build/test-results/test/TEST-*.xml'
             }
-            post {
-                always {
-                    recordIssues(
-                            enabledForFailure: true,
-                            aggregatingResults: true,
-                            tool: trivy(pattern: 'trivy-*.json')
-
-
-                    )
-                }
-            }
-        }
-
-        stage('Publish') {
-            when { expression { false } }
-            steps {
-
-                echo 'Se arcivó el artefacto, Publicando...'
-                //mirar despliegue con pipeline con sentencia 'when
-
-                //'java -jar  build/libs/hello-srping-0.0.1-SNAPSHOT.jar' --> aqui tira directamente del .jar
-
-                // withDockerRegistry([url:'http://10.250.12.3:5050', credentialsId:'token-dockerRegistry']){
-                //   sh 'docker tag hello-srping-pruebas:latest 10.250.12.3:5050/oscarh93/hello-srping:PRUEBAS-1.${BUILD_NUMBER}'
-                //  sh 'docker push 10.250.12.3:5050/oscarh93/hello-srping:PRUEBAS-1.${BUILD_NUMBER}'
-
-            }
-
-            // Parte de ssh Agent
-
-            // sshagent(credentials: ['sshJenkins']) {
-            // sh 'git tag MAIN-1.1.${BUILD_NUMBER}'
-            //  sh 'git push --tags'
-            //Se le puede poner en lugar de todos los cambios, hacerlo por el tag que queramos
-            // }
-
         }
         stage('Deploy') {
             steps {
-                echo 'Desplegando servicio...'
-                sshagent(credentials: ['appkey']) {
-
-                    sh '''
-
-                         ssh -o StrictHostKeyChecking=no app@10.250.12.3 'cd hello-final && docker-compose pull && docker-compose up -d'
-
-                       '''
-
-                }
+                echo 'Deploying....'
+                sh 'docker-compose up -d'
             }
-
         }
-
-
-    }//stages
-
-
-}//pipeline
-
-
+    }
+}
